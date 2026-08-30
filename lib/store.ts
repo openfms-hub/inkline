@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { DEFAULT_IP, STYLE_PRESETS, IpProfile } from "./presets";
 
 export type Shot = {
   id: string;
@@ -30,6 +31,9 @@ export type Project = {
   content: string;
   createdAt: string;
   status: "draft" | "shots" | "images" | "voiceover" | "package";
+  styleId?: string;
+  ipId?: string;
+  sourceUrl?: string;
   shots: Shot[];
   voiceover: VoiceoverLine[];
   voiceoverTips?: string;
@@ -39,7 +43,10 @@ export type Project = {
 export type Settings = {
   llm: { baseUrl: string; apiKey: string; model: string };
   image: { baseUrl: string; apiKey: string; model: string; size: string };
+  styleId: string;
   styleDna: string;
+  ips: IpProfile[];
+  activeIpId: string;
 };
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -59,8 +66,10 @@ const DEFAULT_SETTINGS: Settings = {
     model: "gpt-image-1",
     size: "1536x1024"
   },
-  styleDna:
-    "纯白背景，极简黑色手绘线稿，略微抖动的笔触，大量留白；主角是小黑：一只实心黑色的小怪东西，白点眼睛，细腿，面无表情，负责执行画面里的核心概念动作；点缀少量红/橙/蓝手写中文标注（红=问题与警告，橙=主路径与强调，蓝=补充说明）；怪诞但清爽，不是可爱吉祥物，也不是商业矢量图。"
+  styleId: "xiaohei",
+  styleDna: STYLE_PRESETS[0].dna,
+  ips: [DEFAULT_IP],
+  activeIpId: DEFAULT_IP.id
 };
 
 function ensureDir(dir: string) {
@@ -110,7 +119,10 @@ export function getSettings(): Settings {
   return {
     llm: { ...DEFAULT_SETTINGS.llm, ...saved.llm },
     image: { ...DEFAULT_SETTINGS.image, ...saved.image },
-    styleDna: saved.styleDna ?? DEFAULT_SETTINGS.styleDna
+    styleId: saved.styleId ?? DEFAULT_SETTINGS.styleId,
+    styleDna: saved.styleDna ?? DEFAULT_SETTINGS.styleDna,
+    ips: saved.ips?.length ? saved.ips : DEFAULT_SETTINGS.ips,
+    activeIpId: saved.activeIpId ?? DEFAULT_SETTINGS.activeIpId
   };
 }
 

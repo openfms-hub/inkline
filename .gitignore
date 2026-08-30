@@ -3,6 +3,8 @@ node_modules/
 
 # next.js
 .next/
+.next-old-*/
+build-out/
 out/
 
 # runtime data (contains API keys and user projects — never commit!)

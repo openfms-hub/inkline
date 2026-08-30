@@ -17,7 +17,7 @@ export async function POST(
   saveProject(project);
   try {
     const settings = getSettings();
-    const prompt = buildImagePrompt(shot, settings);
+    const prompt = buildImagePrompt(shot, settings, project);
     const b64 = await generateImage(settings, prompt);
     shot.imagePath = saveImage(project.id, shot.id, b64);
     shot.imageStatus = "done";

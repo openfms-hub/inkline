@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { listProjects, saveProject, Project } from "@/lib/store";
+import { listProjects, saveProject, getSettings, Project } from "@/lib/store";
 
 export async function GET() {
   return NextResponse.json(listProjects());
@@ -10,12 +10,16 @@ export async function POST(req: NextRequest) {
   if (!body.title || !body.content) {
     return NextResponse.json({ error: "标题和正文都不能为空" }, { status: 400 });
   }
+  const settings = getSettings();
   const project: Project = {
     id: crypto.randomUUID(),
     title: body.title,
     content: body.content,
     createdAt: new Date().toISOString(),
     status: "draft",
+    styleId: body.styleId || settings.styleId,
+    ipId: body.ipId || settings.activeIpId,
+    sourceUrl: body.sourceUrl || undefined,
     shots: [],
     voiceover: []
   };

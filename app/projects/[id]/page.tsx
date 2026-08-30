@@ -2,7 +2,8 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Project, Shot } from "@/lib/store";
+import { Project, Settings, Shot } from "@/lib/store";
+import { STYLE_PRESETS, CUSTOM_STYLE_ID } from "@/lib/presets";
 
 const TABS = ["原文", "分镜", "配图", "旁白", "发布包"] as const;
 const STEP_INDEX: Record<string, number> = {
@@ -20,6 +21,7 @@ export default function Workbench() {
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState("");
+  const [settings, setSettings] = useState<Settings | null>(null);
 
   useEffect(() => {
     fetch(`/api/projects/${id}`)
@@ -29,6 +31,9 @@ export default function Workbench() {
         const done = STEP_INDEX[p.status] ?? 0;
         setTab(Math.min(done + (p.status === "package" ? 0 : 1), 4));
       });
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then(setSettings);
   }, [id]);
 
   if (!p) return <p className="muted">加载中…</p>;
@@ -72,9 +77,46 @@ export default function Workbench() {
 
   const shotIdx = (shotId: string) => p!.shots.findIndex((s) => s.id === shotId);
 
+  const ipList = settings?.ips?.length ? settings.ips : [{ id: "xiaohei", name: "小黑", description: "" }];
+  const ipName = ipList.find((i) => i.id === (p.ipId ?? settings?.activeIpId))?.name || "小黑";
+  const projectStyleId = p.styleId ?? settings?.styleId ?? "xiaohei";
+
+  async function setProjectMeta(patch: { styleId?: string; ipId?: string }) {
+    setP({ ...p!, ...patch });
+    await fetch(`/api/projects/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch)
+    });
+  }
+
   return (
     <>
       <h1>{p.title}</h1>
+      <div className="row" style={{ marginBottom: 14, gap: 8 }}>
+        <span className="muted" style={{ flex: "none" }}>配图风格</span>
+        <select
+          value={projectStyleId}
+          onChange={(e) => setProjectMeta({ styleId: e.target.value })}
+          style={{ width: 180 }}
+        >
+          {STYLE_PRESETS.map((sp) => (
+            <option key={sp.id} value={sp.id}>{sp.name}</option>
+          ))}
+          {projectStyleId === CUSTOM_STYLE_ID && <option value={CUSTOM_STYLE_ID}>自定义</option>}
+        </select>
+        <span className="muted" style={{ flex: "none" }}>IP 角色</span>
+        <select
+          value={p.ipId ?? settings?.activeIpId ?? "xiaohei"}
+          onChange={(e) => setProjectMeta({ ipId: e.target.value })}
+          style={{ width: 160 }}
+        >
+          {ipList.map((ip) => (
+            <option key={ip.id} value={ip.id}>{ip.name || "未命名 IP"}</option>
+          ))}
+        </select>
+        <span className="muted">切换后对新生成的分镜 / 配图生效</span>
+      </div>
       <div className="steps">
         {TABS.map((t, i) => (
           <button key={t} className={`stepchip ${tab === i ? "on" : ""} ${i <= STEP_INDEX[p.status] && tab !== i ? "done" : ""}`} onClick={() => setTab(i)}>
@@ -113,7 +155,7 @@ export default function Workbench() {
               <input value={s.theme} onChange={(e) => updateShot(i, { theme: e.target.value })} />
               <label>核心意思</label>
               <textarea rows={2} value={s.core_idea} onChange={(e) => updateShot(i, { core_idea: e.target.value })} />
-              <label>小黑的动作</label>
+              <label>{ipName}的动作</label>
               <textarea rows={2} value={s.xiaohei_action} onChange={(e) => updateShot(i, { xiaohei_action: e.target.value })} />
               <label>标注词（逗号分隔）</label>
               <input value={s.labels.join("，")} onChange={(e) => updateShot(i, { labels: e.target.value.split(/[，,]/).filter(Boolean) })} />
