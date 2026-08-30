@@ -1,7 +1,59 @@
-import { Settings } from "./store";
+import { Settings, Shot } from "./store";
 
 export type StylePreset = { id: string; name: string; dna: string };
 export type IpProfile = { id: string; name: string; description: string };
+
+export type AspectOption = {
+  id: string;
+  name: string;
+  /** 画幅面向的投放场景 */
+  scene: string;
+  /** 图像接口实际请求的像素尺寸（模型仅支持 3:2 / 1:1 档位，按画幅就近映射） */
+  size: string;
+  /** 注入提示词的构图描述 */
+  composition: string;
+};
+
+export const ASPECT_OPTIONS: AspectOption[] = [
+  {
+    id: "16:9",
+    name: "16:9 横版",
+    scene: "B站 / YouTube",
+    size: "1536x1024",
+    composition: "wide horizontal landscape composition (widescreen)"
+  },
+  {
+    id: "9:16",
+    name: "9:16 竖版",
+    scene: "抖音 / 视频号 / 小红书",
+    size: "1024x1536",
+    composition: "tall vertical portrait composition (phone screen)"
+  },
+  {
+    id: "1:1",
+    name: "1:1 方形",
+    scene: "图文 / 公众号",
+    size: "1024x1024",
+    composition: "square composition"
+  }
+];
+
+/** 解析项目实际生效的画幅：项目没指定时缺省 16:9 */
+export function resolveAspect(projectAspectRatio?: string): AspectOption {
+  return ASPECT_OPTIONS.find((a) => a.id === projectAspectRatio) ?? ASPECT_OPTIONS[0];
+}
+
+/** 镜头内容指纹：生成配图/旁白成功时快照，之后分镜字段再改动即视为「过期」 */
+export function shotContentKey(shot: Shot): string {
+  return JSON.stringify([
+    shot.theme,
+    shot.core_idea,
+    shot.structure_type,
+    shot.xiaohei_action,
+    shot.labels,
+    shot.elements
+  ]);
+}
 
 export const STYLE_PRESETS: StylePreset[] = [
   {

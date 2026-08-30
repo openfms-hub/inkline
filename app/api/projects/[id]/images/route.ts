@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getProject, getSettings, saveProject, saveImage } from "@/lib/store";
 import { generateImage } from "@/lib/images";
 import { buildImagePrompt } from "@/lib/prompts";
+import { resolveAspect, shotContentKey } from "@/lib/presets";
 
 export async function POST(
   req: NextRequest,
@@ -18,8 +19,9 @@ export async function POST(
   try {
     const settings = getSettings();
     const prompt = buildImagePrompt(shot, settings, project);
-    const b64 = await generateImage(settings, prompt);
+    const b64 = await generateImage(settings, prompt, resolveAspect(project.aspectRatio).size);
     shot.imagePath = saveImage(project.id, shot.id, b64);
+    shot.imageSnapshot = shotContentKey(shot);
     shot.imageStatus = "done";
     if (project.status === "shots") project.status = "images";
     saveProject(project);

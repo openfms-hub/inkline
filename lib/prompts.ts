@@ -1,5 +1,5 @@
 import { Project, Settings, Shot } from "./store";
-import { resolveIp, resolveStyleDna } from "./presets";
+import { resolveIp, resolveStyleDna, resolveAspect } from "./presets";
 
 export function buildShotListPrompt(project: Project, settings: Settings) {
   const ip = resolveIp(settings, project.ipId);
@@ -32,9 +32,10 @@ ${project.content}`
 export function buildImagePrompt(shot: Shot, settings: Settings, project?: Project) {
   const ip = resolveIp(settings, project?.ipId);
   const styleDna = resolveStyleDna(settings, project?.styleId);
+  const aspect = resolveAspect(project?.aspectRatio);
   const labels = shot.labels.join(" / ");
   const elements = shot.elements.join(" / ");
-  return `Generate one standalone 16:9 horizontal Chinese article illustration.
+  return `Generate one standalone Chinese article illustration with a ${aspect.composition}.
 
 Visual style DNA:
 ${styleDna}

@@ -2,9 +2,11 @@ import { Settings } from "./store";
 
 export async function generateImage(
   settings: Settings,
-  prompt: string
+  prompt: string,
+  sizeOverride?: string
 ): Promise<string> {
-  const { baseUrl, apiKey, model, size } = settings.image;
+  const { baseUrl, apiKey, model } = settings.image;
+  const size = sizeOverride || settings.image.size;
   if (!apiKey) throw new Error("请先在「设置」页填写图像 API Key");
   const res = await fetch(`${baseUrl.replace(/\/$/, "")}/images/generations`, {
     method: "POST",

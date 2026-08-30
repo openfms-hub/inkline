@@ -19,6 +19,12 @@ export async function PUT(
   const body = await req.json();
   if (body.styleId) project.styleId = body.styleId;
   if (body.ipId) project.ipId = body.ipId;
+  if (typeof body.aspectRatio === "string") {
+    if (!["16:9", "9:16", "1:1"].includes(body.aspectRatio)) {
+      return NextResponse.json({ error: "画幅仅支持 16:9 / 9:16 / 1:1" }, { status: 400 });
+    }
+    project.aspectRatio = body.aspectRatio;
+  }
   if (typeof body.title === "string" && body.title.trim()) project.title = body.title.trim();
   if (typeof body.content === "string" && body.content.trim()) project.content = body.content;
   saveProject(project);

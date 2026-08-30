@@ -13,6 +13,10 @@ export type Shot = {
   elements: string[];
   imageStatus: "idle" | "generating" | "done" | "error";
   imagePath?: string;
+  /** 生成配图时的分镜内容指纹，用于判断配图是否已过期 */
+  imageSnapshot?: string;
+  /** 生成旁白时的分镜内容指纹 */
+  voiceoverSnapshot?: string;
   error?: string;
 };
 
@@ -31,6 +35,8 @@ export type Project = {
   content: string;
   createdAt: string;
   status: "draft" | "shots" | "images" | "voiceover" | "package";
+  /** 项目级画幅：16:9 / 9:16 / 1:1，未设置按 16:9 */
+  aspectRatio?: string;
   styleId?: string;
   ipId?: string;
   sourceUrl?: string;

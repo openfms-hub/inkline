@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getProject, getSettings, saveProject } from "@/lib/store";
 import { callLLM, parseJsonBlock } from "@/lib/llm";
 import { buildVoiceoverPrompt } from "@/lib/prompts";
+import { shotContentKey } from "@/lib/presets";
 
 export async function POST(
   _req: NextRequest,
@@ -17,6 +18,10 @@ export async function POST(
     const parsed = parseJsonBlock<{ lines: { shotId: string; text: string }[]; tips?: string }>(raw);
     project.voiceover = parsed.lines || [];
     project.voiceoverTips = parsed.tips || "";
+    for (const line of project.voiceover) {
+      const shot = project.shots.find((s) => s.id === line.shotId);
+      if (shot) shot.voiceoverSnapshot = shotContentKey(shot);
+    }
     if (project.status === "images" || project.status === "voiceover") {
       project.status = "voiceover";
     }
